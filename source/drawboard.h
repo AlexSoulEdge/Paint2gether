@@ -4,13 +4,17 @@
 #include <QColor>
 #include <QImage>
 #include <QPoint>
+#include <QVector>
 #include <QWidget>
+
+#include "paintdata.h"
 
 class DrawBoardArea : public QWidget
 {
     Q_OBJECT
 
 public:
+    friend class myPaintData;
     DrawBoardArea(QWidget *parent = 0);
 
     /*
@@ -75,6 +79,9 @@ private:
     QColor myPenColor;
     QImage image;
     QPoint lastPoint;
+    QPoint temporaryPoint;
+
+    PaintData myPaintData;
 };
 
 

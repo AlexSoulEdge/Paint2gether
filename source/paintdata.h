@@ -3,22 +3,24 @@
 
 #include <QColor>
 #include <QPoint>
+#include <QVector>
 
 class PaintData
 {
 public:
+    friend class DrawBoardArea;
+
     int penWidth;
     QColor penColor;
     QPoint startPoint;
     QPoint endPoint;
-    /*
-     * bitset <T> get_drawing
-     * char *get_drawing = new int [buffer];
-     *
-     * To be added:
-     * serialization of the class
-     */
 
+    QVector<QPoint> shapeBuffer;
+    int bufferSize;
+
+    void addPoint(const QPoint &newPoint);
+    void sendData();
+    bool mouseReleasePoint;
 
 };
 

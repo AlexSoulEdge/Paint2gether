@@ -5,6 +5,7 @@
 #endif
 
 #include "drawboard.h"
+#include "paintdata.h"
 
 DrawBoardArea::DrawBoardArea(QWidget *parent)
     : QWidget(parent)
@@ -95,13 +96,21 @@ void DrawBoardArea::mousePressEvent(QMouseEvent *event)
     {
         lastPoint = event->pos();       //lastPoint is the point from where we begin scribbling
         scribbling = true;
+        myPaintData.addPoint(lastPoint);
+        myPaintData.mouseReleasePoint = false;
+
     }
 }
 
 void DrawBoardArea::mouseMoveEvent(QMouseEvent *event)
 {
     if ((event->buttons() & Qt::LeftButton) && scribbling)
+    {
         drawLineTo(event->pos());       //event->pos() returns a Qpoint of the current mouse position
+        temporaryPoint = event->pos();
+        myPaintData.addPoint(temporaryPoint);
+
+    }
 }
 
 void DrawBoardArea::mouseReleaseEvent(QMouseEvent *event)
@@ -109,6 +118,10 @@ void DrawBoardArea::mouseReleaseEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton && scribbling)
     {
         drawLineTo(event->pos());
+        temporaryPoint = event->pos();
+        myPaintData.mouseReleasePoint = true;
+        myPaintData.addPoint(temporaryPoint);
+
         scribbling = false;
     }
 }

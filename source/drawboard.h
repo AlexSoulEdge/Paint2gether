@@ -14,7 +14,6 @@ class DrawBoardArea : public QWidget
     Q_OBJECT
 
 public:
-    friend class myPaintData;
     DrawBoardArea(QWidget *parent = 0);
 
     /*
@@ -60,6 +59,7 @@ protected:
 
 private:
     void drawLineTo(const QPoint &endPoint);
+    void drawLineTo2(); //used to draw lines between points recieved from the server
     void resizeImage(QImage *image, const QSize &newSize);
 
 

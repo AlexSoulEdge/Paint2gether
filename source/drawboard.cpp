@@ -13,7 +13,7 @@ DrawBoardArea::DrawBoardArea(QWidget *parent)
     setAttribute(Qt::WA_StaticContents);
     modified = false;
     scribbling = false;
-    myPenWidth = 1;
+    myPenWidth = 2;
     myPenColor = Qt::black;
 }
 
@@ -177,13 +177,31 @@ void DrawBoardArea::drawLineTo(const QPoint &endPoint)
  * Optimization:
  * Instead of calling update() with no parameter, we pass a QRect that specifies the rectangle
  * inside the drawboard are needs updating, to avoid a complete repaint of the widget.
- *
- *
- * To be added:
- * serialization of:
- * -lastPoint, endPoint,myPenWidth, myPenColor
  */
 
+void DrawBoardArea::drawLineTo2()
+{
+
+    myPaintData.receiveData();
+    QPainter painter(&image);
+    painter.setPen(QPen(myPaintData.Shape.penColor, myPaintData.Shape.penWidth, Qt::SolidLine, Qt::RoundCap,
+                        Qt::RoundJoin));
+    for(int i = 0; i < myPaintData.Shape.shapeBuffer.size() - 1; i++)
+    {
+        myPaintData.startPoint = myPaintData.Shape.shapeBuffer[i];
+        myPaintData.finishPoint = myPaintData.Shape.shapeBuffer[i+1];
+        painter.drawLine(myPaintData.startPoint, myPaintData.finishPoint);
+        int rad = (myPaintData.Shape.penWidth / 2) + 2;
+        update(QRect(myPaintData.startPoint, myPaintData.finishPoint).normalized()
+                                         .adjusted(-rad, -rad, +rad, +rad));
+    }
+
+}
+
+/*
+ * drawLineTo2() draws the shape recieved from the server
+ * Same optimization as before.
+ */
 
 
 void DrawBoardArea::resizeImage(QImage *image, const QSize &newSize)

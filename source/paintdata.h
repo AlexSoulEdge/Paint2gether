@@ -1,25 +1,34 @@
 #ifndef PAINTDATA_H
 #define PAINTDATA_H
 
+#include <QByteArray>
 #include <QColor>
+#include <QDataStream>
 #include <QPoint>
 #include <QVector>
 
 class PaintData
 {
 public:
-    friend class DrawBoardArea;
+    class ShapeModel
+    {
+    public:
+        int penWidth;
+        QColor penColor;
+        QVector<QPoint> shapeBuffer;
+    }Shape;
 
-    int penWidth;
-    QColor penColor;
-    QPoint startPoint;
-    QPoint endPoint;
-
-    QVector<QPoint> shapeBuffer;
     int bufferSize;
 
+    QByteArray serializeByteArray;
+    QPoint startPoint;
+    QPoint finishPoint;
+    QPoint tempPoint;
+
     void addPoint(const QPoint &newPoint);
-    void sendData();
+    void serializeData();
+    void sendData(); //to be coded by Matei
+    void receiveData();
     bool mouseReleasePoint;
 
 };

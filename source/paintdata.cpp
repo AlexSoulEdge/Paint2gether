@@ -1,32 +1,45 @@
-#include <QVector>
-#include <QPoint>
-
 #include "paintdata.h"
+
+void PaintData::serializeData()
+{
+    QDataStream out(&serializeByteArray, QIODevice::WriteOnly);
+    out << (qint32) Shape.penWidth << Shape.penColor << Shape.shapeBuffer;
+}
 
 void PaintData::sendData()
 {
 
     /*
-     *  !!!!!!!!!!!!!!!!! TO CODE !!!!!!!!!!!!!!!!!!!!!
-     * Here we need to send the buffer to the server(QVector type) and
-     * also the width(myPenWidth) and the color(myPenColor) of the pen
+     *  !!!!!!!!!!!!!!!!! TO BE CODED BY MATEI !!!!!!!!!!!!!!!!!!!!!
+     * Here we need to send the buffer to the server -> serializeByteArray
      */
 
+}
 
+void PaintData::receiveData()
+{
+    /*
+     * Here we should recieve the serialized buffer from the server
+    */
+
+    QDataStream in(serializeByteArray);
+    in >> Shape.penWidth >> Shape.penColor >> Shape.shapeBuffer;
 }
 
 void PaintData::addPoint(const QPoint &newPoint)
 {
-    shapeBuffer << newPoint;
+    Shape.shapeBuffer << newPoint;
 
     if(mouseReleasePoint)
     {
         sendData();
-        shapeBuffer.clear();
-    } else if(shapeBuffer.size() >= bufferSize)
+        Shape.shapeBuffer.clear();
+    } else if(Shape.shapeBuffer.size() >= bufferSize)
     {
         sendData();
-        shapeBuffer.clear();
+        tempPoint = Shape.shapeBuffer.last();
+        Shape.shapeBuffer.clear();
+        Shape.shapeBuffer << tempPoint;
     }
 }
 

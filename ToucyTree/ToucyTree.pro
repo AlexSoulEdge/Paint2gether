@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui \
+         printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,13 +16,23 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     treeitem.cpp \
-    treemodel.cpp
+    treemodel.cpp \
+    paintdata.cpp \
+    drawboard.cpp \
+    updateframe.cpp \
+    winclient.cpp
 
 HEADERS  += mainwindow.h \
     treeitem.h \
-    treemodel.h
+    treemodel.h \
+    paintdata.h \
+    drawboard.h \
+    winclient.h \
+    request.h
 
 FORMS    += mainwindow.ui
 
 RESOURCES += \
     treemodel.qrc
+
+LIBS += -lws2_32

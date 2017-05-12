@@ -6,53 +6,96 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>914</width>
-    <height>409</height>
+    <width>809</width>
+    <height>572</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Editable Tree Model</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTreeView" name="view">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>171</width>
-      <height>661</height>
-     </rect>
+   <layout class="QVBoxLayout">
+    <property name="spacing">
+     <number>0</number>
     </property>
-    <property name="maximumSize">
-     <size>
-      <width>16777215</width>
-      <height>661</height>
-     </size>
+    <property name="leftMargin">
+     <number>0</number>
     </property>
-    <property name="alternatingRowColors">
-     <bool>true</bool>
+    <property name="topMargin">
+     <number>0</number>
     </property>
-    <property name="selectionBehavior">
-     <enum>QAbstractItemView::SelectItems</enum>
+    <property name="rightMargin">
+     <number>0</number>
     </property>
-    <property name="horizontalScrollMode">
-     <enum>QAbstractItemView::ScrollPerPixel</enum>
+    <property name="bottomMargin">
+     <number>0</number>
     </property>
-    <property name="animated">
-     <bool>false</bool>
-    </property>
-    <property name="allColumnsShowFocus">
-     <bool>true</bool>
-    </property>
-   </widget>
+    <item>
+     <widget class="QWidget" name="widget" native="true">
+      <widget class="QTreeView" name="view">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>175</width>
+         <height>661</height>
+        </rect>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>175</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectItems</enum>
+       </property>
+       <property name="horizontalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="animated">
+        <bool>false</bool>
+       </property>
+       <property name="allColumnsShowFocus">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="DrawBoardArea" name="widget_2" native="true">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>0</y>
+         <width>821</width>
+         <height>661</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="Line" name="line">
+       <property name="geometry">
+        <rect>
+         <x>170</x>
+         <y>0</y>
+         <width>20</width>
+         <height>631</height>
+        </rect>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>914</width>
+     <width>809</width>
      <height>21</height>
     </rect>
    </property>
@@ -60,17 +103,23 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="insertChildAction"/>
+   </widget>
+   <widget class="QMenu" name="actionsMenu">
+    <property name="title">
+     <string>&amp;Actions</string>
+    </property>
     <addaction name="insertRowAction"/>
-    <addaction name="removeRowAction"/>
-    <addaction name="separator"/>
     <addaction name="insertColumnAction"/>
+    <addaction name="separator"/>
+    <addaction name="removeRowAction"/>
     <addaction name="removeColumnAction"/>
     <addaction name="separator"/>
-    <addaction name="exitAction"/>
+    <addaction name="insertChildAction"/>
    </widget>
    <addaction name="fileMenu"/>
+   <addaction name="actionsMenu"/>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <action name="exitAction">
    <property name="text">
     <string>E&amp;xit</string>
@@ -120,6 +169,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DrawBoardArea</class>
+   <extends>QWidget</extends>
+   <header location="global">drawboard.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

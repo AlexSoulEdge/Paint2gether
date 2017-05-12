@@ -7,9 +7,9 @@
 #include "drawboard.h"
 #include "paintdata.h"
 
-DrawBoardArea::DrawBoardArea(QWidget *parent)
-    : QWidget(parent)
-{
+
+
+DrawBoardArea::DrawBoardArea(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_StaticContents);
     modified = false;
     scribbling = false;
@@ -63,17 +63,16 @@ bool DrawBoardArea::saveImage(const QString &fileName, const char *fileFormat)
 
 
 
-
 void DrawBoardArea::setPenColor(const QColor &newColor)
 {
-    myPenColor = newColor;
+    this->myPenColor = newColor;
 }
+
 
 void DrawBoardArea::setPenWidth(int newWidth)
 {
     myPenWidth = newWidth;
 }
-
 
 
 void DrawBoardArea::clearImage()
@@ -99,6 +98,7 @@ void DrawBoardArea::mousePressEvent(QMouseEvent *event)
         myPaintData.addPoint(lastPoint);
         myPaintData.mouseReleasePoint = false;
 
+        // client_ptr->sendData("1",2);
     }
 }
 
@@ -155,18 +155,16 @@ void DrawBoardArea::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
 }
 
-
 void DrawBoardArea::drawLineTo(const QPoint &endPoint)
 {
     QPainter painter(&image);
-    painter.setPen(QPen(myPenColor, myPenWidth, Qt::SolidLine, Qt::RoundCap,
-                        Qt::RoundJoin));
+    painter.setPen(QPen(myPenColor, myPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawLine(lastPoint, endPoint);
     modified = true;
 
     int rad = (myPenWidth / 2) + 2;
-    update(QRect(lastPoint, endPoint).normalized()
-                                     .adjusted(-rad, -rad, +rad, +rad));
+    update(QRect(lastPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
+
     lastPoint = endPoint;
 }
 
@@ -179,27 +177,42 @@ void DrawBoardArea::drawLineTo(const QPoint &endPoint)
  * inside the drawboard are needs updating, to avoid a complete repaint of the widget.
  */
 
-void DrawBoardArea::drawLineTo2()
-{
 
-    myPaintData.receiveData();
+void DrawBoardArea::recieveData(char *bufferFromServer, int bufferFromServerSize)
+{
+    QByteArray byte_array;
+    byte_array.fromRawData(bufferFromServer, bufferFromServerSize);
+    QDataStream in(byte_array);
+    int width;
+    in >> width;
+    QColor color;
+    in >> color;
+
     QPainter painter(&image);
-    painter.setPen(QPen(myPaintData.Shape.penColor, myPaintData.Shape.penWidth, Qt::SolidLine, Qt::RoundCap,
-                        Qt::RoundJoin));
-    for(int i = 0; i < myPaintData.Shape.shapeBuffer.size() - 1; i++)
+    painter.setPen(QPen(color, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    int number_of_points;
+    number_of_points = (bufferFromServerSize - 4 - 16) / 8;
+    QVector <QPoint> newPointArray;
+    QPoint tempPoint;
+    for(int i = 0; i < number_of_points; i++)
     {
-        myPaintData.startPoint = myPaintData.Shape.shapeBuffer[i];
+       in >> tempPoint;
+       newPointArray.push_back(tempPoint);
+     }
+
+    for(int i = 0; i < number_of_points; i++)
+    {
+        myPaintData.startPoint = newPointArray[i];
         myPaintData.finishPoint = myPaintData.Shape.shapeBuffer[i+1];
         painter.drawLine(myPaintData.startPoint, myPaintData.finishPoint);
         int rad = (myPaintData.Shape.penWidth / 2) + 2;
-        update(QRect(myPaintData.startPoint, myPaintData.finishPoint).normalized()
-                                         .adjusted(-rad, -rad, +rad, +rad));
+        update(QRect(myPaintData.startPoint, myPaintData.finishPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
     }
 
 }
 
 /*
- * drawLineTo2() draws the shape recieved from the server
+ * recieveData() draws the shape recieved from the server
  * Same optimization as before.
  */
 

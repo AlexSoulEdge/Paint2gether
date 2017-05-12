@@ -1,11 +1,12 @@
-#include "mainwindow.h"
 #include <QApplication>
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+#include "mainwindow.h"
 
-    return a.exec();
+int main(int argc, char *argv[]){
+    Q_INIT_RESOURCE(treemodel);
+
+    QApplication app(argc, argv);
+    MainWindow window;
+    window.show();
+    return app.exec();
 }

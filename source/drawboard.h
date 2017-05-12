@@ -9,11 +9,15 @@
 
 #include "paintdata.h"
 
-class DrawBoardArea : public QWidget
-{
+#include "winclient.h"
+
+class DrawBoardArea : public QWidget {
     Q_OBJECT
 
+    WinSocket *client_ptr;
+
 public:
+
     DrawBoardArea(QWidget *parent = 0);
 
     /*
@@ -37,6 +41,24 @@ public:
     QColor penColor() const { return myPenColor; }
     int penWidth() const { return myPenWidth; }
 
+    void setWinsockPtr(WinSocket *real_client){
+        client_ptr = real_client;
+    }
+
+    WinSocket *getClientPtr(){
+        return client_ptr;
+    }
+
+    WinSocket *getClientPtr_PD(){
+        return myPaintData.client_ptr;
+    }
+
+    void setClientPtr(WinSocket *real_client){
+        client_ptr = real_client;
+    }
+
+    PaintData myPaintData;
+
 public slots:
     void clearImage();
     void print();
@@ -59,7 +81,7 @@ protected:
 
 private:
     void drawLineTo(const QPoint &endPoint);
-    void drawLineTo2(); //used to draw lines between points recieved from the server
+    void recieveData(char *bufferFromServer, int bufferFromServerSize);
     void resizeImage(QImage *image, const QSize &newSize);
 
 
@@ -81,7 +103,6 @@ private:
     QPoint lastPoint;
     QPoint temporaryPoint;
 
-    PaintData myPaintData;
 };
 
 

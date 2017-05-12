@@ -6,21 +6,31 @@
 #include <QDataStream>
 #include <QPoint>
 #include <QVector>
+#include <QDebug>
 
-class PaintData
-{
+#include "winclient.h"
+
+
+class PaintData {
+
 public:
+
+    WinSocket *client_ptr;
+
+    PaintData();
+
     class ShapeModel
     {
     public:
         int penWidth;
         QColor penColor;
-        QVector<QPoint> shapeBuffer;
+        QVector <QPoint> shapeBuffer;
     }Shape;
 
     int bufferSize;
 
     QByteArray serializeByteArray;
+    QByteArray deserializeByteArray;
     QPoint startPoint;
     QPoint finishPoint;
     QPoint tempPoint;
@@ -28,8 +38,11 @@ public:
     void addPoint(const QPoint &newPoint);
     void serializeData();
     void sendData(); //to be coded by Matei
-    void receiveData();
     bool mouseReleasePoint;
+
+    void setClientPtr(WinSocket *real_client){
+        client_ptr = real_client;
+    }
 
 };
 

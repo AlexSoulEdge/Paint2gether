@@ -1,18 +1,170 @@
 #include <QtWidgets>
 
 #include "mainwindow.h"
+#include "treemodel.h"
 #include "drawboard.h"
 
-MainWindow::MainWindow()
-{
-    drawboardArea = new DrawBoardArea;
-    setCentralWidget(drawboardArea);
+#include <QFile>
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+
+    setupUi(this);
+
+    QStringList headers;
+    headers<<tr("File Name")<<tr("Description");
+
+    QFile file(":/default.txt");
+    file.open(QIODevice::ReadOnly);
+    TreeModel *modelTree = new TreeModel(headers, file.readAll());
+    file.close();
+
+    view->setModel(modelTree);
+
+    for (int column = 0; column < modelTree->columnCount(); ++column)
+        view->resizeColumnToContents(column);
+
+    drawboardArea = this->widget_2;
 
     createActions();
     createMenus();
 
     setWindowTitle(tr("DrawBoard"));
     resize(500, 500);
+
+    connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
+
+    updateActions();
+
+    if(!client.getAdrressAndPort(DEFAULT_ADRESS,DEFAULT_PORT))
+        exit(EXIT_FAILURE);
+
+    if(!client.createWinsock())
+        exit(EXIT_FAILURE);
+
+    if(!client.connectToSocket())
+        exit(EXIT_FAILURE);
+
+    WinSocket *ptr = &client;
+    drawboardArea->setWinsockPtr(ptr);
+    drawboardArea->myPaintData.setClientPtr(ptr);
+
+    qDebug()<<&client<<" "<<drawboardArea->getClientPtr()<<" "<<drawboardArea->getClientPtr_PD();
+
+    MainWindow::connect(modelTree, SIGNAL(clicked(const QModelIndex &)), this, SLOT(on_view_clicked(const QModelIndex &)));
+
+    connect(&timer, &QTimer::timeout, this, &MainWindow::updateFrame);
+
+    timer.start(0);
+}
+
+void MainWindow::on_view_clicked(const QModelIndex &jindex) {
+    QAbstractItemModel *model = view->model();
+
+    QString git_gud( qvariant_cast <QString> (model->data(jindex, Qt::DisplayRole)));
+
+    QByteArray barray = git_gud.toLocal8Bit();
+    char *buffer = barray.data();
+
+    char *send_data = new char [git_gud.size() + 4];
+
+    *reinterpret_cast <SREQUEST *>(send_data) = SREQUEST::E_SELECT_WORKSPACE;
+    memcpy(send_data + 4, buffer, git_gud.size());
+
+    client.sendData(send_data, git_gud.size() + 4);
+
+    delete send_data;
+}
+
+void MainWindow::insertChild(const char *filename) {
+    QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel *model = view->model();
+
+    if(model->columnCount(index) == 0) {
+        if(!model->insertColumn(0, index))
+            return;
+    }
+
+    if(!model->insertRow(0, index))
+        return;
+
+    for(int column=0;column<model->columnCount(index);++column){
+        QModelIndex child = model->index(0, column, index);
+        model->setData(child, filename, Qt::EditRole);
+        if (!model->headerData(column, Qt::Horizontal).isValid())
+            model->setHeaderData(column, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+    }
+
+    view->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect);
+
+    updateActions();
+}
+
+bool MainWindow::insertColumn(){
+    QAbstractItemModel *model = view->model();
+    int column = view->selectionModel()->currentIndex().column();
+
+    bool changed = model->insertColumn(column + 1);
+    if(changed)
+        model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+
+    updateActions();
+
+    return changed;
+}
+
+void MainWindow::insertRow(const char *filename){
+    QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel *model = view->model();
+
+    if(!model->insertRow(index.row()+1, index.parent()))
+        return;
+
+    updateActions();
+
+    for(int column=0;column<model->columnCount(index.parent());++column){
+        QModelIndex child = model->index(index.row()+1, column, index.parent());
+        model->setData(child, filename, Qt::EditRole);
+    }
+}
+
+bool MainWindow::removeColumn(){
+    QAbstractItemModel *model = view->model();
+    int column = view->selectionModel()->currentIndex().column();
+
+    bool changed = model->removeColumn(column);
+
+    if(changed)
+        updateActions();
+
+    return changed;
+}
+
+void MainWindow::removeRow(){
+    QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel *model = view->model();
+    if (model->removeRow(index.row(), index.parent()))
+        updateActions();
+}
+
+void MainWindow::updateActions(){
+    bool hasSelection = !view->selectionModel()->selection().isEmpty();
+    removeRowAction->setEnabled(hasSelection);
+    removeColumnAction->setEnabled(hasSelection);
+
+    bool hasCurrent = view->selectionModel()->currentIndex().isValid();
+    insertRowAction->setEnabled(hasCurrent);
+    insertColumnAction->setEnabled(hasCurrent);
+
+    if (hasCurrent) {
+        view->closePersistentEditor(view->selectionModel()->currentIndex());
+
+        int row = view->selectionModel()->currentIndex().row();
+        int column = view->selectionModel()->currentIndex().column();
+        if (view->selectionModel()->currentIndex().parent().isValid())
+            statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
+        else
+            statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -26,7 +178,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-
 void MainWindow::open()
 {
     if (maybeSave())
@@ -37,7 +188,6 @@ void MainWindow::open()
             drawboardArea->openImage(fileName);
     }
 }
-
 
 void MainWindow::save()
 {
@@ -51,10 +201,11 @@ void MainWindow::save()
  * and then choose an entry from the format menu.
  */
 
+
 void MainWindow::penColor()
 {
     QColor newColor = QColorDialog::getColor(drawboardArea->penColor());
-    if (newColor.isValid())
+    if(newColor.isValid())
         drawboardArea->setPenColor(newColor);
 }
 
@@ -76,8 +227,6 @@ void MainWindow::penWidth()
  * a step of 1 (meaning that the up and down arrow increment or decrement the value by 1).
  */
 
-
-
 void MainWindow::about()
 {
     QMessageBox::about(this, tr("About DrawBoard"),
@@ -85,8 +234,7 @@ void MainWindow::about()
                "of the finest scrubs.</p> <p><b>Enjoy!</b></p>"));
 }
 
-void MainWindow::createActions()
-{
+void MainWindow::createActions() {
 
     /*
      * TO CODE : THE NEW IMAGE BUTTON   !!!!!
@@ -95,13 +243,11 @@ void MainWindow::createActions()
 
     newImageAct = new QAction(tr("&New Image..."), this);
     newImageAct->setShortcut(tr("Ctrl+N"));
-    connect(newImageAct, SIGNAL(triggered()),
-            drawboardArea, SLOT(clearImage()));
-
+    connect(newImageAct, SIGNAL(triggered()), drawboardArea, SLOT(clearImage()));
 
     openAct = new QAction(tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+    view->connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
     foreach (QByteArray format, QImageWriter::supportedImageFormats()) {
         QString text = tr("%1...").arg(QString(format).toUpper());
@@ -216,3 +362,5 @@ bool MainWindow::saveFile(const QByteArray &fileFormat)
  * In saveFile(), we pop up a file dialog with a file name suggestion.
  * The static QFileDialog::getSaveFileName() function returns a file name selected by the user.
  */
+
+
